@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Home from "./home";
+import BattleSimulator from "./BattleSimulator";
 import Login from "./Login/Login";
 import Signup from "./Signup/Signup";
 import Submission from "./submission";
