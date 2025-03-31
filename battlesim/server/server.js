@@ -25,7 +25,7 @@ mongoose
 const corsOptions = {
   origin:
     process.env.NODE_ENV === "production"
-      ? "https://rgillooly-portfolio-b3a90409f6d8.herokuapp.com/"
+      ? "https://battle-simulator-83f7699c82e8.herokuapp.com/"
       : "http://localhost:5173",
   credentials: true,
   methods: "GET,POST,PUT,DELETE",

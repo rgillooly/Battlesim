@@ -39,7 +39,7 @@ const Signup = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        `https://rgillooly-portfolio-b3a90409f6d8.herokuapp.com/api/auth/signup`,
+        `https://battle-simulator-83f7699c82e8.herokuapp.com/api/auth/signup`,
         {
           username,
           email,

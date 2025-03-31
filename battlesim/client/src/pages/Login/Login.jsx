@@ -37,7 +37,7 @@ const Login = () => {
 
     try {
       const { data } = await axios.post(
-        `https://rgillooly-portfolio-b3a90409f6d8.herokuapp.com/api/auth/login`, // Correct endpoint
+        `https://battle-simulator-83f7699c82e8.herokuapp.com/api/auth/login`, // Correct endpoint
         loginData
       );
       console.log("Response:", data);
