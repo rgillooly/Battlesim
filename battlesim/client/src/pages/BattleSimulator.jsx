@@ -1,153 +1,195 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./home.css";
 
 const BattleSimulator = () => {
   const [battleLog, setBattleLog] = useState([]);
   const [units, setUnits] = useState([]);
-  const [unitStates, setUnitStates] = useState([]);
-  const [newUnit, setNewUnit] = useState({
-    name: "",
-    attack: 0,
-    health: 0,
-    weakness: "",
-  });
   const [side1, setSide1] = useState([]);
   const [side2, setSide2] = useState([]);
+  const [error, setError] = useState(null);
+  const [isBattleOngoing, setIsBattleOngoing] = useState(false);
 
-  const addUnit = () => {
-    if (newUnit.name && newUnit.attack > 0 && newUnit.health > 0) {
-      setUnits([...units, newUnit]);
-      setNewUnit({ name: "", attack: 0, health: 0, weakness: "" });
-    }
+  useEffect(() => {
+    const fetchUnits = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("You must be logged in to view your Units.");
+        return;
+      }
+      try {
+        const response = await axios.get(
+          "https://rgillooly-portfolio-b3a90409f6d8.herokuapp.com/api/units/all",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (response.data.success) {
+          setUnits(response.data.units);
+        } else {
+          setError(response.data.message || "Failed to load units.");
+        }
+      } catch (err) {
+        setError(
+          err.response?.data?.message ||
+            "An error occurred while fetching units."
+        );
+      }
+    };
+    fetchUnits();
+  }, []);
+
+  const handleDragStart = (e, unit) => {
+    e.dataTransfer.setData("unit", JSON.stringify(unit));
   };
 
-  const assignUnitToSide = (unit, side) => {
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, side) => {
+    e.preventDefault();
+    const unit = JSON.parse(e.dataTransfer.getData("unit"));
+    const unitWithHealth = { ...unit, currentHealth: unit.health };
+
     if (side === 1) {
-      setSide1([...side1, { ...unit, currentHealth: unit.health }]);
+      setSide1((prev) => [...prev, unitWithHealth]);
     } else {
-      setSide2([...side2, { ...unit, currentHealth: unit.health }]);
+      setSide2((prev) => [...prev, unitWithHealth]);
     }
   };
 
-  const attack = (attackerIndex, defenderIndex, attackingSide) => {
-    setUnitStates((prevState) => {
-      const newSide1 = [...side1];
-      const newSide2 = [...side2];
-      let attacker =
-        attackingSide === 1 ? newSide1[attackerIndex] : newSide2[attackerIndex];
-      let defender =
-        attackingSide === 1 ? newSide2[defenderIndex] : newSide1[defenderIndex];
+  const findWeakTarget = (attacker, enemies) => {
+    if (enemies.length === 0) return null;
+    return (
+      enemies.find((unit) => unit.weakness === attacker.name) ||
+      enemies[Math.floor(Math.random() * enemies.length)]
+    );
+  };
 
-      let attackPower = attacker.attack;
-      if (attacker.currentHealth < attacker.health / 2) {
-        attackPower = Math.floor(attackPower / 2);
-      }
-      if (defender.weakness === attacker.name) {
-        attackPower *= 1.5;
-      }
+  const attackUnit = (attacker, defender) => {
+    let attackPower = attacker.attack;
+    if (attacker.currentHealth < attacker.health / 2) {
+      attackPower = Math.floor(attackPower / 2);
+    }
+    if (defender.weakness === attacker.name) {
+      attackPower *= 1.5;
+    }
 
-      defender.currentHealth = Math.max(
-        0,
-        defender.currentHealth - attackPower
-      );
+    defender.currentHealth = Math.max(0, defender.currentHealth - attackPower);
 
-      setBattleLog((prevLog) => [
-        ...prevLog,
-        `${attacker.name} attacks ${defender.name} for ${attackPower} damage!`,
-      ]);
+    setBattleLog((prevLog) => [
+      ...prevLog,
+      `${attacker.name} attacks ${defender.name} for ${attackPower} damage!`,
+    ]);
+  };
 
-      return prevState;
-    });
+  const startBattle = () => {
+    setIsBattleOngoing(true);
+    const battleInterval = setInterval(() => {
+      setSide1((prevSide1) => {
+        setSide2((prevSide2) => {
+          if (prevSide1.length === 0 || prevSide2.length === 0) {
+            clearInterval(battleInterval);
+            setIsBattleOngoing(false);
+            setBattleLog((prevLog) => [
+              ...prevLog,
+              `⚔️ Battle Over! ${
+                prevSide1.length === 0 ? "Side 2 Wins!" : "Side 1 Wins!"
+              }`,
+            ]);
+            return prevSide2;
+          }
+
+          let updatedSide1 = [...prevSide1];
+          let updatedSide2 = [...prevSide2];
+
+          updatedSide1.forEach((attacker) => {
+            let target = findWeakTarget(attacker, updatedSide2);
+            if (target) attackUnit(attacker, target);
+          });
+
+          updatedSide2.forEach((attacker) => {
+            let target = findWeakTarget(attacker, updatedSide1);
+            if (target) attackUnit(attacker, target);
+          });
+
+          updatedSide1 = updatedSide1.filter((unit) => unit.currentHealth > 0);
+          updatedSide2 = updatedSide2.filter((unit) => unit.currentHealth > 0);
+
+          return updatedSide2;
+        });
+
+        return prevSide1.filter((unit) => unit.currentHealth > 0);
+      });
+    }, 1000);
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">Medieval Battle Simulator</h1>
-
-      <div className="my-4">
-        <h2 className="text-lg font-semibold">Create a New Unit</h2>
-        <input
-          type="text"
-          placeholder="Name"
-          value={newUnit.name}
-          onChange={(e) => setNewUnit({ ...newUnit, name: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Attack"
-          value={newUnit.attack}
-          onChange={(e) =>
-            setNewUnit({ ...newUnit, attack: parseInt(e.target.value) })
-          }
-        />
-        <input
-          type="number"
-          placeholder="Health"
-          value={newUnit.health}
-          onChange={(e) =>
-            setNewUnit({ ...newUnit, health: parseInt(e.target.value) })
-          }
-        />
-        <input
-          type="text"
-          placeholder="Weakness"
-          value={newUnit.weakness}
-          onChange={(e) => setNewUnit({ ...newUnit, weakness: e.target.value })}
-        />
-        <Button onClick={addUnit}>Add Unit</Button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 my-4">
-        <div>
-          <h2 className="text-lg font-semibold">Available Units</h2>
-          {units.map((unit, index) => (
-            <div key={index} className="border p-2 rounded shadow">
-              <h2>{unit.name}</h2>
-              <p>
-                Attack: {unit.attack}, Health: {unit.health}
-              </p>
-              <Button onClick={() => assignUnitToSide(unit, 1)}>
-                Add to Side 1
-              </Button>
-              <Button onClick={() => assignUnitToSide(unit, 2)}>
-                Add to Side 2
-              </Button>
-            </div>
-          ))}
+    <div className="grid-container-main">
+      <div className="p-4">
+        <h1 className="text-xl font-bold">Medieval Battle Simulator</h1>
+        {error && <p className="text-red-500">{error}</p>}
+        <div className="grid-item-units">
+          <div>
+            <h2 className="text-lg font-semibold">Available Units</h2>
+            <ul className="border p-4" onDragOver={(e) => e.preventDefault()}>
+              {units.map((unit, index) => (
+                <li
+                  key={index}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, unit)}
+                  className="border p-2 cursor-move"
+                >
+                  {unit.name} (Attack: {unit.attack}, Health: {unit.health})
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="grid-item-battle-log">Battle Log</h2>
+            {battleLog.map((log, index) => (
+              <p key={index}>{log}</p>
+            ))}
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-semibold">Battle Log</h2>
-          {battleLog.map((log, index) => (
-            <p key={index}>{log}</p>
-          ))}
+        <div className="grid-item-sides">
+          <div>
+            <h2 className="grid-item-side-1">Side 1</h2>
+            <ul
+              className="border p-4 min-h-[100px]"
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, 1)}
+            >
+              {side1.map((unit, index) => (
+                <li key={index} className="border p-2">
+                  {unit.name} (Health: {unit.currentHealth} / {unit.health})
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="grid-item-side-2">Side 2</h2>
+            <ul
+              className="border p-4 min-h-[100px]"
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, 2)}
+            >
+              {side2.map((unit, index) => (
+                <li key={index} className="border p-2">
+                  {unit.name} (Health: {unit.currentHealth} / {unit.health})
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <h2 className="text-lg font-semibold">Side 1</h2>
-          {side1.map((unit, index) => (
-            <div key={index} className="border p-2 rounded shadow">
-              <h2>{unit.name}</h2>
-              <p>
-                Health: {unit.currentHealth} / {unit.health}
-              </p>
-              <Button onClick={() => attack(index, 0, 1)}>Attack Side 2</Button>
-            </div>
-          ))}
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold">Side 2</h2>
-          {side2.map((unit, index) => (
-            <div key={index} className="border p-2 rounded shadow">
-              <h2>{unit.name}</h2>
-              <p>
-                Health: {unit.currentHealth} / {unit.health}
-              </p>
-              <Button onClick={() => attack(index, 0, 2)}>Attack Side 1</Button>
-            </div>
-          ))}
-        </div>
+        <button
+          onClick={startBattle}
+          className="p-2 bg-green-500 text-white"
+          disabled={isBattleOngoing}
+        >
+          Start Battle
+        </button>
       </div>
     </div>
   );
