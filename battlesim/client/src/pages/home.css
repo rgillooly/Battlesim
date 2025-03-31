@@ -11,4 +11,5 @@
 .grid-item-side-2 {
   display: grid;
   height: 500px;
+  grid-column-start: 2;
 }
