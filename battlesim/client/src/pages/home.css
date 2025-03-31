@@ -1,7 +1,14 @@
 .grid-item-sides {
   display: grid;
+  grid-template-columns: auto auto;
 }
 
 .grid-item-side-1 {
   display: grid;
+  height: 500px;
+}
+
+.grid-item-side-2 {
+  display: grid;
+  height: 500px;
 }
