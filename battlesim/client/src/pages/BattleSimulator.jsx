@@ -154,13 +154,13 @@ const BattleSimulator = () => {
           </div>
         </div>
         <div className="grid-item-sides">
-          <div>
-            <h2 className="grid-item-side-1">Side 1</h2>
-            <ul
-              className="border p-4 min-h-[100px]"
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, 1)}
-            >
+          <div
+            className="grid-item-side-1"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, 1)}
+          >
+            <h2>Side 1</h2>
+            <ul className="border p-4 min-h-[100px]">
               {side1.map((unit, index) => (
                 <li key={index} className="border p-2">
                   {unit.name} (Health: {unit.currentHealth} / {unit.health})
@@ -168,13 +168,13 @@ const BattleSimulator = () => {
               ))}
             </ul>
           </div>
-          <div>
-            <h2 className="grid-item-side-2">Side 2</h2>
-            <ul
-              className="border p-4 min-h-[100px]"
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, 2)}
-            >
+          <div
+            className="grid-item-side-2"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, 2)}
+          >
+            <h2>Side 2</h2>
+            <ul className="border p-4 min-h-[100px]">
               {side2.map((unit, index) => (
                 <li key={index} className="border p-2">
                   {unit.name} (Health: {unit.currentHealth} / {unit.health})
