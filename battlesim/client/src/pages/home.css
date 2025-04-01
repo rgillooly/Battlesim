@@ -29,4 +29,5 @@ body {
 .unit-grid {
   display: grid;
   grid-template-columns: auto auto auto auto auto;
+  grid-auto-flow: row;
 }
