@@ -65,7 +65,7 @@ const BattleSimulator = () => {
         return;
       }
       const response = await axios.post(
-        "https://battle-simulator-83f7699c82e8.herokuapp.com/api/submission/add",
+        "https://battle-simulator-83f7699c82e8.herokuapp.com/api/unit/add",
         newUnit,
         {
           headers: { Authorization: `Bearer ${token}` },
