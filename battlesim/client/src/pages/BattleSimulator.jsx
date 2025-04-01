@@ -49,6 +49,10 @@ const BattleSimulator = () => {
     setNewUnit({ ...newUnit, [e.target.name]: e.target.value });
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault(); // Prevent default to allow dropping
+  };
+
   const addUnit = async () => {
     if (!newUnit.name || !newUnit.attack || !newUnit.health) {
       setError("Please fill in all fields.");
