@@ -174,7 +174,7 @@ const BattleSimulator = () => {
                   key={index}
                   draggable
                   onDragStart={(e) => handleDragStart(e, unit)}
-                  className="border p-2 cursor-move"
+                  className="unit"
                 >
                   {unit.name} (Attack: {unit.attack}, Health: {unit.health})
                 </li>

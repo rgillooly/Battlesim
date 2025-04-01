@@ -20,3 +20,8 @@ body {
   background-color: rgb(43, 43, 43);
   color: white;
 }
+
+.unit {
+  display: grid;
+  border: 1px solid black;
+}
