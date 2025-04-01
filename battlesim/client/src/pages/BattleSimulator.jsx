@@ -49,18 +49,36 @@ const BattleSimulator = () => {
     setNewUnit({ ...newUnit, [e.target.name]: e.target.value });
   };
 
-  const addUnit = () => {
+  const addUnit = async () => {
     if (!newUnit.name || !newUnit.attack || !newUnit.health) {
-      alert("Please fill in all fields.");
+      setError("Please fill in all fields.");
       return;
     }
-    const unit = {
-      ...newUnit,
-      attack: parseInt(newUnit.attack),
-      health: parseInt(newUnit.health),
-    };
-    setUnits((prevUnits) => [...prevUnits, unit]);
-    setNewUnit({ name: "", attack: "", health: "", weakness: "" });
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("You must be logged in to add a unit.");
+        return;
+      }
+      const response = await axios.post(
+        "https://battle-simulator-83f7699c82e8.herokuapp.com/api/submission/add",
+        newUnit,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (response.data.success) {
+        setUnits([...units, response.data.unit]); // Update state with the new unit
+        setNewUnit({ name: "", attack: "", health: "", weakness: "" }); // Clear form
+      } else {
+        setError(response.data.message || "Failed to add unit.");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "An error occurred while adding the unit."
+      );
+    }
   };
 
   const handleDragStart = (e, unit) => {
