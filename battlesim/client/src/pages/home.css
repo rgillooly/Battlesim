@@ -25,3 +25,8 @@ body {
   display: grid;
   border: 1px solid black;
 }
+
+.unit-grid {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+}

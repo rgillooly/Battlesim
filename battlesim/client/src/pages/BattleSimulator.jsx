@@ -166,7 +166,7 @@ const BattleSimulator = () => {
         <h1 className="text-xl font-bold">Medieval Battle Simulator</h1>
         {error && <p className="text-red-500">{error}</p>}
         <div className="grid-item-units">
-          <div>
+          <div className="unit-grid">
             <h2 className="text-lg font-semibold">Available Units</h2>
             <ul className="border p-4" onDragOver={(e) => e.preventDefault()}>
               {units.map((unit, index) => (
