@@ -25,7 +25,7 @@ const BattleSimulator = () => {
       }
       try {
         const response = await axios.get(
-          "https://battle-simulator-83f7699c82e8.herokuapp.com/api/units/all",
+          "https://battle-simulator-83f7699c82e8.herokuapp.com/api/submission/all",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
