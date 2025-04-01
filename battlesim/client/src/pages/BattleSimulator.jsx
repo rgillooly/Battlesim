@@ -9,6 +9,12 @@ const BattleSimulator = () => {
   const [side2, setSide2] = useState([]);
   const [error, setError] = useState(null);
   const [isBattleOngoing, setIsBattleOngoing] = useState(false);
+  const [newUnit, setNewUnit] = useState({
+    name: "",
+    attack: "",
+    health: "",
+    weakness: "",
+  });
 
   useEffect(() => {
     const fetchUnits = async () => {
@@ -39,12 +45,26 @@ const BattleSimulator = () => {
     fetchUnits();
   }, []);
 
-  const handleDragStart = (e, unit) => {
-    e.dataTransfer.setData("unit", JSON.stringify(unit));
+  const handleInputChange = (e) => {
+    setNewUnit({ ...newUnit, [e.target.name]: e.target.value });
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
+  const addUnit = () => {
+    if (!newUnit.name || !newUnit.attack || !newUnit.health) {
+      alert("Please fill in all fields.");
+      return;
+    }
+    const unit = {
+      ...newUnit,
+      attack: parseInt(newUnit.attack),
+      health: parseInt(newUnit.health),
+    };
+    setUnits((prevUnits) => [...prevUnits, unit]);
+    setNewUnit({ name: "", attack: "", health: "", weakness: "" });
+  };
+
+  const handleDragStart = (e, unit) => {
+    e.dataTransfer.setData("unit", JSON.stringify(unit));
   };
 
   const handleDrop = (e, side) => {
@@ -52,11 +72,8 @@ const BattleSimulator = () => {
     const unit = JSON.parse(e.dataTransfer.getData("unit"));
     const unitWithHealth = { ...unit, currentHealth: unit.health };
 
-    if (side === 1) {
-      setSide1((prev) => [...prev, unitWithHealth]);
-    } else {
-      setSide2((prev) => [...prev, unitWithHealth]);
-    }
+    if (side === 1) setSide1((prev) => [...prev, unitWithHealth]);
+    else setSide2((prev) => [...prev, unitWithHealth]);
   };
 
   const findWeakTarget = (attacker, enemies) => {
@@ -75,9 +92,7 @@ const BattleSimulator = () => {
     if (defender.weakness === attacker.name) {
       attackPower *= 1.5;
     }
-
     defender.currentHealth = Math.max(0, defender.currentHealth - attackPower);
-
     setBattleLog((prevLog) => [
       ...prevLog,
       `${attacker.name} attacks ${defender.name} for ${attackPower} damage!`,
@@ -100,7 +115,6 @@ const BattleSimulator = () => {
             ]);
             return prevSide2;
           }
-
           let updatedSide1 = [...prevSide1];
           let updatedSide2 = [...prevSide2];
 
@@ -119,7 +133,6 @@ const BattleSimulator = () => {
 
           return updatedSide2;
         });
-
         return prevSide1.filter((unit) => unit.currentHealth > 0);
       });
     }, 1000);
@@ -130,64 +143,55 @@ const BattleSimulator = () => {
       <div className="p-4">
         <h1 className="text-xl font-bold">Medieval Battle Simulator</h1>
         {error && <p className="text-red-500">{error}</p>}
+
+        <div className="unit-form">
+          <input
+            type="text"
+            name="name"
+            placeholder="Unit Name"
+            value={newUnit.name}
+            onChange={handleInputChange}
+          />
+          <input
+            type="number"
+            name="attack"
+            placeholder="Attack"
+            value={newUnit.attack}
+            onChange={handleInputChange}
+          />
+          <input
+            type="number"
+            name="health"
+            placeholder="Health"
+            value={newUnit.health}
+            onChange={handleInputChange}
+          />
+          <input
+            type="text"
+            name="weakness"
+            placeholder="Weakness (Optional)"
+            value={newUnit.weakness}
+            onChange={handleInputChange}
+          />
+          <button onClick={addUnit}>Add Unit</button>
+        </div>
+
         <div className="grid-item-units">
-          <div>
-            <h2 className="text-lg font-semibold">Available Units</h2>
-            <ul className="border p-4" onDragOver={(e) => e.preventDefault()}>
-              {units.map((unit, index) => (
-                <li
-                  key={index}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, unit)}
-                  className="border p-2 cursor-move"
-                >
-                  {unit.name} (Attack: {unit.attack}, Health: {unit.health})
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h2 className="grid-item-battle-log">Battle Log</h2>
-            {battleLog.map((log, index) => (
-              <p key={index}>{log}</p>
+          <h2>Available Units</h2>
+          <ul onDragOver={(e) => e.preventDefault()}>
+            {units.map((unit, index) => (
+              <li
+                key={index}
+                draggable
+                onDragStart={(e) => handleDragStart(e, unit)}
+              >
+                {unit.name} (Atk: {unit.attack}, HP: {unit.health})
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
-        <div className="grid-item-sides">
-          <div
-            className="grid-item-side-1"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, 1)}
-          >
-            <h2>Side 1</h2>
-            <ul className="border p-4 min-h-[100px]">
-              {side1.map((unit, index) => (
-                <li key={index} className="border p-2">
-                  {unit.name} (Health: {unit.currentHealth} / {unit.health})
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div
-            className="grid-item-side-2"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, 2)}
-          >
-            <h2>Side 2</h2>
-            <ul className="border p-4 min-h-[100px]">
-              {side2.map((unit, index) => (
-                <li key={index} className="border p-2">
-                  {unit.name} (Health: {unit.currentHealth} / {unit.health})
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        <button
-          onClick={startBattle}
-          className="p-2 bg-green-500 text-white"
-          disabled={isBattleOngoing}
-        >
+
+        <button onClick={startBattle} disabled={isBattleOngoing}>
           Start Battle
         </button>
       </div>
